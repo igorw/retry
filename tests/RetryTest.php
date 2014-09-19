@@ -4,18 +4,19 @@ namespace igorw;
 
 class RetryTest extends \PHPUnit_Framework_TestCase
 {
-    function testRetryWithoutFailing()
+    public function testRetryWithoutFailing()
     {
         $i = 0;
         $value = retry(1, function () use (&$i) {
             $i++;
+
             return 5;
         });
         $this->assertSame(1, $i);
         $this->assertSame(5, $value);
     }
 
-    function testRetryFailingOnce()
+    public function testRetryFailingOnce()
     {
         $i = 0;
         $failed = false;
@@ -25,13 +26,14 @@ class RetryTest extends \PHPUnit_Framework_TestCase
                 $failed = true;
                 throw new \RuntimeException('roflcopter');
             }
+
             return 5;
         });
         $this->assertSame(2, $i);
         $this->assertSame(5, $value);
     }
 
-    function testRetryFailingTooHard()
+    public function testRetryFailingTooHard()
     {
         $e = null;
         $i = 0;
@@ -49,7 +51,7 @@ class RetryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(2, $i);
     }
 
-    function testRetryManyTimes()
+    public function testRetryManyTimes()
     {
         $e = null;
         $i = 0;
