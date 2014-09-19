@@ -20,6 +20,16 @@ $user = retry(5, () ==> User::find($id));
 $user = retry(INF, () ==> {
     throw new RuntimeException('never gonna give you up');
 });
+
+// set an optional retry delay to prevent floods
+$user = retry(
+    5,
+    function () use ($id) {
+        return User::find($id);
+    },
+    5   // retry delay (in seconds)
+);
+
 ?>
 ```
 
