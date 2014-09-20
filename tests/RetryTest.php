@@ -11,6 +11,7 @@ class RetryTest extends \PHPUnit_Framework_TestCase
             $i++;
             return 5;
         });
+
         $this->assertSame(1, $i);
         $this->assertSame(5, $value);
     }
@@ -27,6 +28,7 @@ class RetryTest extends \PHPUnit_Framework_TestCase
             }
             return 5;
         });
+
         $this->assertSame(2, $i);
         $this->assertSame(5, $value);
     }
@@ -54,7 +56,7 @@ class RetryTest extends \PHPUnit_Framework_TestCase
         $e = null;
         $i = 0;
         try {
-            retry(1000, function () use (&$i, &$failed) {
+            retry(1000, function () use (&$i) {
                 $i++;
                 throw new \RuntimeException('dogecoin');
             });
