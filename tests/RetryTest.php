@@ -51,10 +51,25 @@ class RetryTest extends \PHPUnit_Framework_TestCase
 
     function testRetryManyTimes()
     {
+        $i = 0;
+        $value = retry(10, function () use (&$i) {
+            $i++;
+            if ($i < 8) {
+                throw new \RuntimeException('gödel escher doge');
+            }
+            return 5;
+        });
+
+        $this->assertSame(8, $i);
+        $this->assertSame(5, $value);
+    }
+
+    function testRetryManyTimesFailingTooHard()
+    {
         $e = null;
         $i = 0;
         try {
-            retry(1000, function () use (&$i, &$failed) {
+            retry(1000, function () use (&$i) {
                 $i++;
                 throw new \RuntimeException('dogecoin');
             });
@@ -64,6 +79,7 @@ class RetryTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceof('igorw\FailingTooHardException', $e);
         $this->assertInstanceof('RuntimeException', $e->getPrevious());
         $this->assertSame('dogecoin', $e->getPrevious()->getMessage());
+        $this->assertCount(1001, $e->exceptions);
         $this->assertSame(1001, $i);
     }
 }
