@@ -2,10 +2,15 @@
 
 namespace igorw;
 
-class FailingTooHardException extends \Exception {
+class Result
+{
+    public $success;
+    public $value;
     public $exceptions;
-    function __construct(array $exceptions) {
-        parent::__construct('', 0, array_pop(array_values($exceptions)));
+    function __construct($success, $value, array $exceptions)
+    {
+        $this->success = $success;
+        $this->value = $value;
         $this->exceptions = $exceptions;
     }
 }
@@ -15,11 +20,19 @@ function retry($retries, callable $fn)
     $exceptions = [];
     beginning:
     try {
-        return $fn();
+        return new Result(
+            true,
+            $fn(),
+            $exceptions
+        );
     } catch (\Exception $e) {
         $exceptions[] = $e;
         if (!$retries) {
-            throw new FailingTooHardException($exceptions);
+            return new Result(
+                false,
+                null,
+                $exceptions
+            );
         }
         $retries--;
         goto beginning;

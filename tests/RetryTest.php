@@ -7,19 +7,20 @@ class RetryTest extends \PHPUnit_Framework_TestCase
     function testRetryWithoutFailing()
     {
         $i = 0;
-        $value = retry(1, function () use (&$i) {
+        $result = retry(1, function () use (&$i) {
             $i++;
             return 5;
         });
+
         $this->assertSame(1, $i);
-        $this->assertSame(5, $value);
+        $this->assertEquals(new Result(true, 5, []), $result);
     }
 
     function testRetryFailingOnce()
     {
         $i = 0;
         $failed = false;
-        $value = retry(1, function () use (&$i, &$failed) {
+        $result = retry(1, function () use (&$i, &$failed) {
             $i++;
             if (!$failed) {
                 $failed = true;
@@ -27,32 +28,35 @@ class RetryTest extends \PHPUnit_Framework_TestCase
             }
             return 5;
         });
+
         $this->assertSame(2, $i);
-        $this->assertSame(5, $value);
+        $this->assertInstanceOf('igorw\Result', $result);
+        $this->assertTrue($result->success);
+        $this->assertSame(5, $result->value);
+        $this->assertCount(1, $result->exceptions);
     }
 
     function testRetryFailingTooHard()
     {
-        $e = null;
         $i = 0;
-        try {
-            retry(1, function () use (&$i) {
-                $i++;
-                throw new \RuntimeException('rofl');
-            });
-        } catch (\Exception $e) {
-        }
+        $result = retry(1, function () use (&$i) {
+            $i++;
+            throw new \RuntimeException('rofl');
+        });
 
-        $this->assertInstanceof('igorw\FailingTooHardException', $e);
-        $this->assertInstanceof('RuntimeException', $e->getPrevious());
-        $this->assertSame('rofl', $e->getPrevious()->getMessage());
+        $this->assertInstanceOf('igorw\Result', $result);
+        $this->assertFalse($result->success);
+        $this->assertNull($result->value);
+        $this->assertCount(2, $result->exceptions);
+        $this->assertInstanceof('RuntimeException', $result->exceptions[1]);
+        $this->assertSame('rofl', $result->exceptions[1]->getMessage());
         $this->assertSame(2, $i);
     }
 
     function testRetryManyTimes()
     {
         $i = 0;
-        $value = retry(10, function () use (&$i) {
+        $result = retry(10, function () use (&$i) {
             $i++;
             if ($i < 8) {
                 throw new \RuntimeException('gödel escher doge');
@@ -61,25 +65,26 @@ class RetryTest extends \PHPUnit_Framework_TestCase
         });
 
         $this->assertSame(8, $i);
-        $this->assertSame(5, $value);
+        $this->assertInstanceOf('igorw\Result', $result);
+        $this->assertTrue($result->success);
+        $this->assertSame(5, $result->value);
+        $this->assertCount(7, $result->exceptions);
     }
 
     function testRetryManyTimesFailingTooHard()
     {
-        $e = null;
         $i = 0;
-        try {
-            retry(1000, function () use (&$i) {
-                $i++;
-                throw new \RuntimeException('dogecoin');
-            });
-        } catch (\Exception $e) {
-        }
+        $result = retry(1000, function () use (&$i) {
+            $i++;
+            throw new \RuntimeException('dogecoin');
+        });
 
-        $this->assertInstanceof('igorw\FailingTooHardException', $e);
-        $this->assertInstanceof('RuntimeException', $e->getPrevious());
-        $this->assertSame('dogecoin', $e->getPrevious()->getMessage());
-        $this->assertCount(1001, $e->exceptions);
+        $this->assertInstanceOf('igorw\Result', $result);
+        $this->assertFalse($result->success);
+        $this->assertNull($result->value);
+        $this->assertCount(1001, $result->exceptions);
+        $this->assertInstanceof('RuntimeException', $result->exceptions[1]);
+        $this->assertSame('dogecoin', $result->exceptions[1]->getMessage());
         $this->assertSame(1001, $i);
     }
 }
