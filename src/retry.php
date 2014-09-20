@@ -4,7 +4,7 @@ namespace igorw;
 
 class FailingTooHardException extends \Exception {}
 
-function retry($retries, callable $fn)
+function retry($retries, callable $fn, $delay = 0)
 {
     beginning:
     try {
@@ -14,6 +14,7 @@ function retry($retries, callable $fn)
             throw new FailingTooHardException('', 0, $e);
         }
         $retries--;
+        sleep($delay);
         goto beginning;
     }
 }

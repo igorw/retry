@@ -68,4 +68,24 @@ class RetryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame('dogecoin', $e->getPrevious()->getMessage());
         $this->assertSame(1001, $i);
     }
+
+    function testRetryDelay()
+    {
+        $e = null;
+        $i = 0;
+        $t = microtime(true);
+        try {
+            retry(1, function () use (&$i, &$failed) {
+                $i++;
+                throw new \RuntimeException('dogecoin');
+            }, 1);
+        } catch (\Exception $e) {
+        }
+
+        $this->assertInstanceof('igorw\FailingTooHardException', $e);
+        $this->assertInstanceof('RuntimeException', $e->getPrevious());
+        $this->assertSame('dogecoin', $e->getPrevious()->getMessage());
+        $this->assertSame(2, $i);
+        $this->assertGreaterThan(1, microtime(true) - $t);
+    }
 }
