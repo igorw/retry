@@ -10,9 +10,8 @@ function retry($retries, callable $fn)
     try {
         return $fn();
     } catch (\Exception $e) {
-        if (!$retries) {
+        if ( ! $retries)
             throw new FailingTooHardException('', 0, $e);
-        }
         $retries--;
         goto beginning;
     }
