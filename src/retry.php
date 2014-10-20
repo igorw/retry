@@ -2,7 +2,7 @@
 
 namespace igorw;
 
-class retry extends \Exception {}
+class FailingTooHardException extends \Exception {}
 
 function retry($retries, callable $fn)
 {
