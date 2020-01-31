@@ -13,9 +13,9 @@ function retry($retries, callable $fn, callable $onError = null)
     if ($onError) {
         $onError($e);
     }
-    if (!$retries--) {
-        throw new FailingTooHardException('', 0, $e);
+    if ($retries--) {
+        goto beginning;
     }
-    goto beginning;
+    throw new FailingTooHardException('', 0, $e);
 }
 
