@@ -6,16 +6,16 @@ class FailingTooHardException extends \Exception {}
 
 function retry($retries, callable $fn, callable $onError = null)
 {
-    beginning:
-    try {
-        return $fn();
-    } catch (\Exception $e) {}
-    if ($onError) {
-        $onError($e);
+    do
+    {
+        try {
+            return $fn();
+        } catch (\Exception $e) {}
+        if ($onError) {
+            $onError($e);
+        }
     }
-    if ($retries--) {
-        goto beginning;
-    }
+    while ($retries--);
     throw new FailingTooHardException('', 0, $e);
 }
 
